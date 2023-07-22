@@ -2,8 +2,9 @@
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
-#define GRAVITY 0.5f
-#define JUMP_VELOCITY -10.0f
+#define GRAVITY 1.2f
+#define JUMP_VELOCITY -20.0f
+#define SPEED 8
 
 typedef struct {
   float x, y;
@@ -76,22 +77,38 @@ void handleInput() {
           }
           break;
         case SDLK_DOWN:
-          // if (velocity.y != -1) {
-          //   velocity.x = 0;
-          //   velocity.y = 1;
-          // }
+
           break;
         case SDLK_LEFT:
-          // if (velocity.x != 1) {
-          //   velocity.x = -1;
-          //   velocity.y = 0;
-          // }
+          if (player.vx != -SPEED) {
+            player.vx = -SPEED;
+          }
           break;
         case SDLK_RIGHT:
-          // if (velocity.x != -1) {
-          //   velocity.x = 1;
-          //   velocity.y = 0;
-          // }
+          if (player.vx != SPEED) {
+            player.vx = SPEED;
+          }
+          break;
+      }
+    }
+    if (event.type == SDL_KEYUP) {
+      // directions
+      switch (event.key.keysym.sym) {
+        case SDLK_UP:
+
+          break;
+        case SDLK_DOWN:
+
+          break;
+        case SDLK_LEFT:
+          if (player.vx == -SPEED) {
+            player.vx = 0;
+          }
+          break;
+        case SDLK_RIGHT:
+          if (player.vx == SPEED) {
+            player.vx = 0;
+          }
           break;
       }
     }
