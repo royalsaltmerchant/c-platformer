@@ -2,19 +2,29 @@
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
+#define GRAVITY 0.5f
+#define JUMP_VELOCITY -10.0f
 
 typedef struct {
-  int x;
-  int y;
-} Position;
+  float x, y;
+  float vx, vy;
+  int width, height;
+  int onGround;
+} Player;
+
+typedef struct {
+  int x, y;
+  int width, height;
+} Platform;
 
 Engine engine;
-Position velocity;
+Player player;
+Platform platform;
 int gameState;
 SDL_Color textColor = {255, 255, 255, 255};
 SDL_Texture* startTexture;
 
-void init() {
+void initGame() {
   char *title = "New Game";
   char *fontLocation = "./assets/OpenSans-Regular.ttf";
   initEngine(&engine, title, SCREEN_WIDTH, SCREEN_HEIGHT, fontLocation, 24);
@@ -23,6 +33,23 @@ void init() {
   // graphics
   // start screen text
   startTexture = createTextTexture(&engine, "Press any key to start", textColor);
+}
+
+void initPlayer() {
+  player.x = 100;
+  player.y = 100;
+  player.vx = 0;
+  player.vy = 0;
+  player.width = 50;
+  player.height = 50;
+  player.onGround = 0;
+}
+
+void initPlatform() {
+  platform.x = 0;
+  platform.y = SCREEN_HEIGHT - 100;
+  platform.width = SCREEN_WIDTH;
+  platform.height = 100;
 }
 
 void handleInput() {
@@ -36,35 +63,35 @@ void handleInput() {
     if (event.type == SDL_KEYDOWN) {
       // Start screen
       if (gameState == 2) {
-        // TODO: INIT GAME
+        initPlayer();
+        initPlatform();
         gameState = 1;
         return;
       }
       // directions
       switch (event.key.keysym.sym) {
         case SDLK_UP:
-          if (velocity.y != 1) {
-            velocity.x = 0;
-            velocity.y = -1;
+          if (player.onGround) {
+            player.vy = JUMP_VELOCITY;
           }
           break;
         case SDLK_DOWN:
-          if (velocity.y != -1) {
-            velocity.x = 0;
-            velocity.y = 1;
-          }
+          // if (velocity.y != -1) {
+          //   velocity.x = 0;
+          //   velocity.y = 1;
+          // }
           break;
         case SDLK_LEFT:
-          if (velocity.x != 1) {
-            velocity.x = -1;
-            velocity.y = 0;
-          }
+          // if (velocity.x != 1) {
+          //   velocity.x = -1;
+          //   velocity.y = 0;
+          // }
           break;
         case SDLK_RIGHT:
-          if (velocity.x != -1) {
-            velocity.x = 1;
-            velocity.y = 0;
-          }
+          // if (velocity.x != -1) {
+          //   velocity.x = 1;
+          //   velocity.y = 0;
+          // }
           break;
       }
     }
@@ -72,7 +99,19 @@ void handleInput() {
 }
 
 void update() {
+  player.vy += GRAVITY;
+  player.x += player.vx;
+  player.y += player.vy;
 
+  if (player.y + player.height > platform.y && 
+      player.x < platform.x + platform.width && 
+      player.x + player.width > platform.x) {
+    player.y = platform.y - player.height;
+    player.vy = 0;
+    player.onGround = 1;
+  } else {
+    player.onGround = 0;
+  }
 }
 
 void render() {
@@ -85,6 +124,15 @@ void render() {
   switch (gameState) {
     case 1: {
       update(); 
+
+
+      SDL_Rect playerRect = {player.x, player.y, player.width, player.height};
+      SDL_SetRenderDrawColor(engine.renderer, 255, 0, 0, 255);
+      SDL_RenderFillRect(engine.renderer, &playerRect);
+      
+      SDL_Rect platformRect = {platform.x, platform.y, platform.width, platform.height};
+      SDL_SetRenderDrawColor(engine.renderer, 0, 255, 0, 255);
+      SDL_RenderFillRect(engine.renderer, &platformRect);
 
       SDL_RenderPresent(engine.renderer);
       break;
@@ -100,12 +148,12 @@ void render() {
 }
 
 int main() {
-  init();
+  initGame();
 
   while (gameState != 0) {
     handleInput();
     render();
-    SDL_Delay(90);
+    SDL_Delay(30);
   }
 
   // cleanup
